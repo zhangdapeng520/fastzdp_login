@@ -19,17 +19,8 @@ ALGORITHM = "HS256"
 # 令牌有效期
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
-
-def get_db():
-    db = Session(engine)
-    try:
-        yield db
-    finally:
-        db.close()
-
-
 app.include_router(fastzdp_login.get_user_router(
-    get_db,
+    engine,
     SECRET_KEY,
     ALGORITHM,
     ACCESS_TOKEN_EXPIRE_MINUTES * 60

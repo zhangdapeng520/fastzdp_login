@@ -46,17 +46,8 @@ ALGORITHM = "HS256"
 # 令牌有效期
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
-
-def get_db():
-    db = Session(engine)
-    try:
-        yield db
-    finally:
-        db.close()
-
-
 app.include_router(fastzdp_login.get_user_router(
-    get_db,
+    engine,
     SECRET_KEY,
     ALGORITHM,
     ACCESS_TOKEN_EXPIRE_MINUTES * 60
@@ -86,3 +77,6 @@ req -X POST -H 'Content-Type:application/json' -d '{\"username\":\"zhangdapeng\"
 
 - 代码改造，迁移至Github
 
+### v0.1.4
+
+- 整合fastzdp_sqlmodel
