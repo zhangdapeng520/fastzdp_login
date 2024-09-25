@@ -8,10 +8,9 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.11"
-fastapi = "^0.111.0"
 passlib = "^1.7.4"
 pyjwt = "^2.8.0"
-fastzdp-sqlmodel = "^0.1.0"
+fastzdp-api = "^0.1.5"
 
 
 [[tool.poetry.source]]
