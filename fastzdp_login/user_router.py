@@ -114,11 +114,15 @@ def get_user_router(
         if not users or len(users) == 0:
             return JSONResponse(status_code=404, content="不存在该用户")
 
+        # 判断rdb是否存在
+        if rdb is None:
+            return JSONResponse(status_code=500, content="缓存对象不存在")
+
         # 校验验证码
         cache_code = rdb.get(schema.phone)
         if not cache_code:
             return JSONResponse(status_code=400, content="验证码已过期")
-        if cache_code!= schema.code:
+        if cache_code != str(schema.code):
             return JSONResponse(status_code=400, content="验证码不正确")
 
         # 返回
