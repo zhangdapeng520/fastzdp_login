@@ -4,10 +4,12 @@ import fastzdp_sqlmodel as fasm
 import fastzdp_redis as fzr
 from fastapi import APIRouter, status, Body, HTTPException
 from sqlalchemy import Engine
-from .jwt_util import get_jwt
+from starlette.responses import JSONResponse
+
+from .jwt_util import get_jwt, get_user_token
 from .passlib_util import hash_256, verify_256
 from .user_model import FastZdpUserModel
-from .user_schema import SendCodeSchema
+from .user_schema import SendCodeSchema, PhoneLoginSchema
 
 
 def get_user_router(
@@ -18,7 +20,7 @@ def get_user_router(
         prefix="/fastzdp_login",
         get_phone_code_func=None,
         rdb: fzr.FastZDPRedisClient = None,
-        code_expired:int = 60,
+        code_expired: int = 60,
 ):
     """
     获取用户相关的路由
@@ -65,17 +67,15 @@ def get_user_router(
         if not verify_256(password, user.password):
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="用户名或密码错误")
 
-        # 生成Token
-        data = {
-            "username": user.username,
-            "id": user.id,
-            "time": time.time(),
-            "expired": jwt_token_expired,
-        }
-        access_token = get_jwt(data, jwt_key, jwt_algorithm)
-
         # 返回
-        return {"access_token": access_token, "token_type": "bearer"}
+        return get_user_token(
+            jwt_key,
+            jwt_algorithm,
+            user.id,
+            user.username,
+            user.phone,
+            jwt_token_expired,
+        )
 
     @user_router.post("/code/", summary="发送验证码")
     async def send_code(schema: SendCodeSchema):
@@ -102,5 +102,34 @@ def get_user_router(
 
         # 返回
         return {"code": code}
+
+    @user_router.post("/phone_login/", summary="通过手机号登录")
+    async def phone_login(schema: PhoneLoginSchema):
+        """
+        通过手机号登录
+        - phone 手机号,长度是11位,不能为空
+        """
+        # 查找
+        users = fasm.get_by_dict(engine, FastZdpUserModel, {"phone": schema.phone})
+        if not users or len(users) == 0:
+            return JSONResponse(status_code=404, content="不存在该用户")
+
+        # 校验验证码
+        cache_code = rdb.get(schema.phone)
+        if not cache_code:
+            return JSONResponse(status_code=400, content="验证码已过期")
+        if cache_code!= schema.code:
+            return JSONResponse(status_code=400, content="验证码不正确")
+
+        # 返回
+        user = users[0]
+        return get_user_token(
+            jwt_key,
+            jwt_algorithm,
+            user.id,
+            user.username,
+            user.phone,
+            jwt_token_expired,
+        )
 
     return user_router
