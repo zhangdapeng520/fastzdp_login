@@ -7,10 +7,11 @@ license = "Apache-2.0"
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.11"
+python = "^3.12"
 passlib = "^1.7.4"
 pyjwt = "^2.8.0"
 fastzdp-api = "^0.1.5"
+fastzdp-redis = "^0.1.0"
 
 
 [[tool.poetry.source]]

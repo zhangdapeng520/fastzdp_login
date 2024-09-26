@@ -1,12 +1,14 @@
 import time
 import random
 import fastzdp_sqlmodel as fasm
+import fastzdp_redis as fzr
 from fastapi import APIRouter, status, Body, HTTPException
 from sqlalchemy import Engine
 from .jwt_util import get_jwt
 from .passlib_util import hash_256, verify_256
 from .user_model import FastZdpUserModel
 from .user_schema import SendCodeSchema
+
 
 def get_user_router(
         engine: Engine,
@@ -15,10 +17,14 @@ def get_user_router(
         jwt_token_expired=3 * 60 * 60,
         prefix="/fastzdp_login",
         get_phone_code_func=None,
+        rdb: fzr.FastZDPRedisClient = None,
+        code_expired:int = 60,
 ):
     """
     获取用户相关的路由
     - get_phone_code_func 用来获取手机验证码的函数, 如果为空, 我们则返回随机的数字
+    - rdb Redis客户端对象
+    - code_expired 验证码过期时间
     """
     user_router = APIRouter(prefix=prefix, tags=["fastzdp_login"])
 
@@ -83,12 +89,17 @@ def get_user_router(
             # 不存在就新增
             fasm.add(engine, FastZdpUserModel(phone=schema.phone))
 
-        # TODO: 发送验证码
+        # 发送验证码
         code = None
         if get_phone_code_func is not None:
             code = get_phone_code_func()
         else:
             code = random.randint(1000, 9999)
+
+        # 缓存验证码
+        if rdb is not None:
+            rdb.set(schema.phone, code, code_expired)
+
         # 返回
         return {"code": code}
 
