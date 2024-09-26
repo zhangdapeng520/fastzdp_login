@@ -80,3 +80,9 @@ req -X POST -H 'Content-Type:application/json' -d '{\"username\":\"zhangdapeng\"
 ### v0.1.4
 
 - 整合fastzdp_sqlmodel
+
+### v0.1.5
+
+- 新增发送验证码接口
+- 新增手机号登录接口
+- 整合fastzdp_redis框架

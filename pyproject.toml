@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "fastzdp-login"
-version = "0.1.4"
+version = "0.1.5"
 description = "专为Fast API打造的用户登录注册相关功能的微代码框架"
 authors = ["zhangdapeng"]
 license = "Apache-2.0"
